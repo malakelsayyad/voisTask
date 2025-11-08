@@ -1,5 +1,5 @@
 import { IWeather } from './../../core/interfaces/IWeather';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { WeatherService } from '../../services/weather.service';
 import { Subscription } from 'rxjs';
@@ -8,7 +8,7 @@ import { DatePipe } from '@angular/common';
 @Component({
   selector: 'app-specific-weather',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe,RouterLink],
   templateUrl: './specific-weather.component.html',
   styleUrl: './specific-weather.component.scss'
 })
