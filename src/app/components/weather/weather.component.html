@@ -1,0 +1,192 @@
+<section class="container py-4">
+  <div class="d-flex justify-content-center my-3">
+    <img src="./assets/images/weather.png" style="width: 100px" alt="" />
+    <h1 class="text-primary my-4">Weather Forecast</h1>
+  </div>
+
+  <!-- Search + Unit Toggle + Date Filter -->
+  <div class="card shadow-lg p-4 mb-5 bg-white rounded-4">
+    <div class="row g-3 align-items-start">
+      
+      <!-- Search Input -->
+      <div class="col-12 col-md-5">
+        <label class="mb-2 fw-bold h5 text-primary">Search by City</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+          <input
+            [(ngModel)]="searchTerm"
+            type="text"
+            placeholder="Search city..."
+            class="form-control"
+          />
+          @if (searchTerm) {
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="clearSearchFilter()"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Date Filter -->
+      <div class="col-12 col-md-4">
+        <label class="mb-2 fw-bold h5 text-primary">Filter by Date</label>
+        <div class="input-group">
+          <input [(ngModel)]="selectedDate" type="date" class="form-control" />
+          @if (selectedDate) {
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="clearDateFilter()"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Unit Toggle -->
+      <div class="col-12 col-md-3 d-flex justify-content-start justify-content-md-end align-items-end">
+        <div>
+          <label class="mb-2 fw-bold h5 text-primary d-block d-md-none">Unit:</label>
+          <div class="btn-group shadow-sm" role="group">
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              [class.active]="unit === 'C'"
+              (click)="unit = 'C'"
+            >
+              °C
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              [class.active]="unit === 'F'"
+              (click)="unit = 'F'"
+            >
+              °F
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="my-2">
+    <h2 class="text-primary">Cities :</h2>
+
+    @if (weatherList.length > 0) {
+      @if (hasDisplayableCities()) {
+        <owl-carousel-o [options]="customOptionsWeather">
+          @for (city of weatherList | search:searchTerm; track city.id) {
+            @if (hasForecastForSelectedDate(city)) {
+              <ng-template carouselSlide>
+                <div class="px-2">
+                  <div
+                    class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden transition-all cursor-pointer weather-card"
+                    
+                    role="button"
+                    tabindex="0"
+                  >
+                    <div class="card-header bg-primary text-white text-center py-3">
+                      <h5 class="mb-0 fw-bold">{{ city.city }}</h5>
+                      @if (selectedDate) {
+                        <small class="opacity-75">Forecast for {{ selectedDate | date : "MMM d, yyyy" }}</small>
+                      }
+                    </div>
+
+                    <div class="card-body text-center p-4">
+                      @if (selectedDate) {
+                        <div class="display-6 fw-bold text-primary mb-2">
+                          {{
+                            unit === "C"
+                              ? getForecastForSelectedDate(city)?.temperatureCelsius
+                              : getForecastForSelectedDate(city)?.temperatureFahrenheit
+                          }}°<span class="h5">{{ unit }}</span>
+                        </div>
+                        <p class="text-muted small mb-2">
+                          {{ getForecastForSelectedDate(city)?.date | date : "EEE, MMM d" }}
+                        </p>
+                        <div class="d-flex justify-content-center align-items-center gap-4 mt-3">
+                          <div>
+                            <i class="fas fa-tint text-info"></i>
+                            <span class="ms-1 fw-medium">{{ getForecastForSelectedDate(city)?.humidity }}%</span>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="display-6 fw-bold text-primary mb-2">
+                          {{
+                            unit === "C"
+                              ? city.forecast[city.forecast.length - 1].temperatureCelsius
+                              : city.forecast[city.forecast.length - 1].temperatureFahrenheit
+                          }}°<span class="h5">{{ unit }}</span>
+                        </div>
+                        <p class="text-muted small mb-2">
+                          {{ city.forecast[city.forecast.length - 1].date | date : "EEE, MMM d" }}
+                        </p>
+                        <div class="d-flex justify-content-center align-items-center gap-4 mt-3">
+                          <div>
+                            <i class="fas fa-tint text-info"></i>
+                            <span class="ms-1 fw-medium">{{ city.forecast[city.forecast.length - 1].humidity }}%</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+
+                    <div class="card-footer bg-light text-center small text-muted py-2 ">
+                      <i class="fas fa-clock me-1"></i>
+                      @if (selectedDate) {
+                        Specific Date Forecast
+                      } @else {
+                        Latest Forecast
+                      }
+                      
+                    </div>
+                    <button class="btn btn-primary " [routerLink]="['/weather', city.id]">
+                      Get Weather table
+                    </button>
+                  </div>
+                </div>
+              </ng-template>
+            }
+          }
+        </owl-carousel-o>
+      } @else {
+        <div class="alert text-center py-5 rounded-4 shadow-lg">
+          <i class="fas fa-search fa-3x mb-3"></i>
+          <h4 class="text-primary">No Matching Cities Found</h4>
+          <p class="text-muted mb-3">
+            @if (searchTerm && selectedDate) {
+              No cities matching "<strong>{{ searchTerm }}</strong>" have forecast for 
+              <strong>{{ selectedDate | date : "fullDate" }}</strong>
+            } @else if (searchTerm) {
+              No cities found matching "<strong>{{ searchTerm }}</strong>"
+            } @else if (selectedDate) {
+              No cities have forecast for <strong>{{ selectedDate | date : "fullDate" }}</strong>
+            }
+          </p>
+          <div class="d-flex gap-2 justify-content-center">
+            @if (searchTerm) {
+              <button class="btn btn-outline-primary" (click)="clearSearchFilter()">
+                Clear Search
+              </button>
+            }
+            @if (selectedDate) {
+              <button class="btn btn-outline-primary" (click)="clearDateFilter()">
+                Clear Date Filter
+              </button>
+            }
+            <button class="btn btn-primary" (click)="clearAllFilters()">
+              Clear All Filters
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </section>
+</section>
